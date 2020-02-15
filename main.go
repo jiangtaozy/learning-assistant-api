@@ -11,6 +11,8 @@ import (
   "encoding/json"
   "net/http"
   "github.com/graphql-go/graphql"
+  "github.com/jiangtaozy/learning-assistant-api/query"
+  "github.com/jiangtaozy/learning-assistant-api/mutation"
 )
 
 type PostData struct {
@@ -22,48 +24,14 @@ var port = ":6000"
 var schema graphql.Schema
 
 func main() {
-  query := graphql.NewObject(
-    graphql.ObjectConfig{
-      Name: "query",
-      Fields: graphql.Fields{
-        "hello": &graphql.Field{
-          Type: graphql.String,
-          Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-            return "world", nil
-          },
-        },
-      },
-    },
-  )
-  mutation := graphql.NewObject(
-    graphql.ObjectConfig{
-      Name: "mutation",
-      Fields: graphql.Fields{
-        "create": &graphql.Field{
-          Type: graphql.String,
-          Args: graphql.FieldConfigArgument{
-            "text": &graphql.ArgumentConfig{
-              Type: graphql.NewNonNull(
-                graphql.String,
-              ),
-            },
-          },
-          Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-            text, _ := params.Args["text"].(string)
-            return text, nil
-          },
-        },
-      },
-    },
-  )
   schema, _ = graphql.NewSchema(
     graphql.SchemaConfig{
-      Query: query,
-      Mutation: mutation,
+      Query: query.Query,
+      Mutation: mutation.Mutation,
     },
   )
   log.Println("listen at ", port)
-  http.HandleFunc("/", handle)
+  http.HandleFunc("/graphql", handle)
   log.Fatal(http.ListenAndServe(port, nil))
 }
 
