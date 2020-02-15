@@ -14,6 +14,7 @@ var Mutation = graphql.NewObject(
     graphql.ObjectConfig{
       Name: "mutation",
       Fields: graphql.Fields{
+        "getValidationCode": GetValidationCodeMutation,
         "create": &graphql.Field{
           Type: graphql.String,
           Args: graphql.FieldConfigArgument{

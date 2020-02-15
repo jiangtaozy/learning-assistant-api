@@ -11,6 +11,7 @@ import (
   "encoding/json"
   "net/http"
   "github.com/graphql-go/graphql"
+  "github.com/jiangtaozy/learning-assistant-api/db"
   "github.com/jiangtaozy/learning-assistant-api/query"
   "github.com/jiangtaozy/learning-assistant-api/mutation"
 )
@@ -24,6 +25,7 @@ var port = ":6000"
 var schema graphql.Schema
 
 func main() {
+  db.Init()
   schema, _ = graphql.NewSchema(
     graphql.SchemaConfig{
       Query: query.Query,
