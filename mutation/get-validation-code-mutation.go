@@ -8,9 +8,14 @@ package mutation
 
 import (
   "log"
-  "context"
+  "time"
+  "strconv"
+  "math/rand"
+  "github.com/satori/go.uuid"
   "github.com/graphql-go/graphql"
-  "github.com/learning-assistant-api/db"
+  "github.com/GiterLab/aliyun-sms-go-sdk/dysms"
+  "github.com/jiangtaozy/learning-assistant-api/db"
+  "github.com/jiangtaozy/learning-assistant-api/config"
 )
 
 var GetValidationCodeMutation = &graphql.Field{
@@ -24,20 +29,22 @@ var GetValidationCodeMutation = &graphql.Field{
   },
   Resolve: func(params graphql.ResolveParams) (interface{}, error) {
     phone, _ := params.Args["phone"].(string)
-    log.Println("phone: ", phone)
-    ctx, cancel := context.WithTimeout(
-      context.Background(),
-      10 * time.Second,
-    )
-    defer cancel()
-    resp, err := db.Etcd.Get(ctx, phone)
+    validationCode, _ := db.RedisClient.Get(phone).Result()
+    if validationCode != "" {
+      return "已经发送过了", nil
+    }
+    dysms.HTTPDebugEnable = true
+    dysms.SetACLClient(config.AlismsAccessKeyId, config.AlismsAccessKeySecret)
+    uid := uuid.NewV4()
+    randomNumber := rand.Intn(10000)
+    // send sms
+    respSendSms, err := dysms.SendSms(uid.String(), phone, "小符问题", "SMS_145594497", `{"code":"` + strconv.Itoa(randomNumber) + `"}`).DoActionWithException()
     if err != nil {
-      log.Printf("error: %v\n", err)
+      log.Println("send sms failed", err, respSendSms.Error())
+      return "发送失败", nil
     }
-    log.Printf("resp.Kvs: %v\n", resp.Kvs)
-    if len(resp.Kvs) > 0 {
-      log.Println("已经发送")
-    }
-    return "ok", nil
+    // save sms
+    _ = db.RedisClient.Set(phone, strconv.Itoa(randomNumber), 3 * time.Minute).Err()
+    return "发送成功", nil
   },
 }

@@ -12,6 +12,7 @@ import (
   "net/http"
   "github.com/graphql-go/graphql"
   "github.com/jiangtaozy/learning-assistant-api/db"
+  "github.com/jiangtaozy/learning-assistant-api/config"
   "github.com/jiangtaozy/learning-assistant-api/query"
   "github.com/jiangtaozy/learning-assistant-api/mutation"
 )
@@ -26,6 +27,7 @@ var schema graphql.Schema
 
 func main() {
   db.Init()
+  config.Init()
   schema, _ = graphql.NewSchema(
     graphql.SchemaConfig{
       Query: query.Query,
